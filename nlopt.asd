@@ -8,6 +8,8 @@
   :serial t
   :depends-on (:cffi :trivial-package-local-nicknames)
   :components ((:file "package")
-			   (:file "swig")
-               (:file "nlopt")))
+			   (:file "cffi")
+			   (:file "utils")
+               (:file "nlopt")
+			   (:file "example")))
 
