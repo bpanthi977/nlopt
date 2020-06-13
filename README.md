@@ -84,13 +84,13 @@ Functions that have `set-foo` and `get-foo` counterparts are defined as `(setf (
 
 All other functions are name similarly. 
 #### The NLopt Object
-| NLopt                                            | Common Lisp Binding        |
-|--------------------------------------------------|----------------------------|
-| nlopt_destroy(nlopt_opt opt)                     |                            |
-| nlopt_copy(const nlopt_opt opt)                  | (copy nlopt)               |
-| nlopt_get_algorithm(const nlopt_opt opt);        | (algorithm nlopt)          |
-| nlopt_get_dimension(const nlopt_opt opt);        | (dimensions nlopt)         |
-| nlopt_algorithm_name(nlopt_algorithm algorithm); | (algorithm-name algorithm) |
+| NLopt                                               | Common Lisp Binding          |
+|-----------------------------------------------------|------------------------------|
+| nlopt_create(nlopt_algorithm algorithm, unsigned n) | (create algorithm dimension) |
+| nlopt_copy(const nlopt_opt opt)                     | (copy nlopt)                 |
+| nlopt_get_algorithm(const nlopt_opt opt);           | (algorithm nlopt)            |
+| nlopt_get_dimension(const nlopt_opt opt);           | (dimensions nlopt)           |
+| nlopt_algorithm_name(nlopt_algorithm algorithm);    | (algorithm-name algorithm)   |
 
 #### Objective Function
 | NLopt                                                                                          | Common Lisp Binding                            |
@@ -127,7 +127,7 @@ All other functions are name similarly.
 | nlopt_get_stopval(const nlopt_opt opt);               | (stopval nlopt)                  |
 | nlopt_set_ftol_rel(nlopt_opt opt, double tol);        | (setf (ftol-rel nlopt) tol)      |
 | nlopt_get_ftol_rel(const nlopt_opt opt);              | (ftol-rel nlopt)                 |
-| nlopt_set_ftol_abs(nlopt_opt opt, double tol);        | (setf (ftol_abs nlopt) tol)      |
+| nlopt_set_ftol_abs(nlopt_opt opt, double tol);        | (setf (ftol-abs nlopt) tol)      |
 | nlopt_get_ftol_abs(const nlopt_opt opt);              | (ftol-abs nlopt)                 |
 | nlopt_set_xtol_rel(nlopt_opt opt, double tol);        | (setf (xtol-rel nlopt) tol)      |
 | nlopt_get_xtol_rel(const nlopt_opt opt);              | (xtol-rel nlopt)                 |
