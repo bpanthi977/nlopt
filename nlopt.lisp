@@ -4,7 +4,6 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (trivial-package-local-nicknames:add-package-local-nickname :c :nlopt.cffi))
 
-
 ;;; Library Loading 
 (cffi:define-foreign-library nlopt
   (:windows "libnlopt.dll")
@@ -40,15 +39,15 @@ selects which lisp callback to use. The identifer foreign struct is used to sele
 (cffi:defcstruct callback-identifier
   (n :int))
 
-(defmethod add-new-callback ((nlopt nlopt) (function function))
+(defun add-new-callback (nlopt function)
   "Adds a callback to nlopt object and returns an struct to identify that callback"
-  (let ((identifier (cffi:foreign-alloc '(:struct callback-identifier)))
-		(callbacks (callbacks nlopt)))
-	(setf callbacks (cons function callbacks))
-	(setf (cffi:foreign-slot-value identifier '(:struct callback-identifier) 'n)
-		  (length callbacks))
-	(push identifier (identifiers nlopt))
-	identifier))
+  (with-slots (callbacks identifiers) nlopt 
+	(let ((identifier (cffi:foreign-alloc '(:struct callback-identifier))))
+	  (setf (cffi:foreign-slot-value identifier '(:struct callback-identifier) 'n)
+			(length callbacks))
+	  (setf callbacks (nconc callbacks (list function)))
+	  (setf identifiers (nconc identifiers (list identifier)))
+	  identifier)))
 
 (cffi:defcallback objective-callback :double
 	((n :unsigned-int) (x :pointer) (grad :pointer) (user_data :pointer))
@@ -69,7 +68,7 @@ selects which lisp callback to use. The identifer foreign struct is used to sele
 					v 
 					*nlopt-instance*)))
 	(assert (= (length r) n))
-	(setf-doubles vpre r)))
+	(setf-doubles2 vpre r)))
 
 
 (cffi:defcallback constraint-callback :double
@@ -89,13 +88,12 @@ selects which lisp callback to use. The identifer foreign struct is used to sele
   (declare (ignore dimension))
   (cffi:with-foreign-slots ((n) data (:struct callback-identifier))
 	(let ((r (funcall (nth n (callbacks *nlopt-instance*))
-					  m
 					  x
 					  (unless (cffi:null-pointer-p grad)
 						grad)
 					  *nlopt-instance*)))
 	  (assert (= (length r) m))
-	  (setf-doubles result r))))
+	  (setf-doubles2 result r))))
 
 ;;;;;
 ;;; Bindings
@@ -266,11 +264,12 @@ nonnegative eigenvalues."
 c(pointer to doubles x, pointer to gradient or NULL, nlopt) 
 tolerance `tol' is used to check -tol <= c(x) <= tol"
   (let ((callback-identifier (add-new-callback nlopt function)))
-	(c:add_equality_constraint (ptr nlopt)
-							   (cffi:get-callback 'constraint-callback)
-							   callback-identifier
-							   tol)
-	callback-identifier))
+	(ensure-success
+	  (c:add_equality_constraint (ptr nlopt)
+								 (cffi:get-callback 'constraint-callback)
+								 callback-identifier
+								 tol))))
+
 
 
 (defun add-inequality-constraint (nlopt function &optional (tol 1d-6))
@@ -278,11 +277,12 @@ tolerance `tol' is used to check -tol <= c(x) <= tol"
 c(pointer to doubles x, pointer to gradient or NULL, nlopt) 
 tolerance `tol' is used to check c(x) <= tol"
   (let ((callback-identifier (add-new-callback nlopt function)))
-	(c:add_equality_constraint (ptr nlopt)
-							   (cffi:get-callback 'constraint-callback)
-							   callback-identifier
-							   tol)
-	callback-identifier))
+	(ensure-success
+	  (c:add_inequality_constraint (ptr nlopt)
+								 (cffi:get-callback 'constraint-callback)
+								 callback-identifier
+								 tol))))
+
 
 (defun remove-equality-constraints (nlopt)
   "Remove all equality constraints"
@@ -294,11 +294,10 @@ tolerance `tol' is used to check c(x) <= tol"
   ;; TODO: remove identifiers, and callbacks from nlopt object too 
   (c:remove_inequality_constraints (ptr nlopt)))
 
-(defmethod add-equality-mconstraint (nlopt m function tol)
+(defun add-equality-mconstraint (nlopt m function tol)
   "Add multiple equality constraints c_i(x) = 0; i=1,2,..m 
 `function' = `c' should return list of `m' doubles
-c(m, 
-  pointer to doubles x,
+c(pointer to doubles x,
   pointer to gradient(jacobian) `∂c_i(x)/∂x_j' or NULL,  (m rows, n columns)
   nlopt)
 `tol' is tolerances as in single constaints, it can be a number, nil, list of tolerance or array of double-floats
@@ -309,15 +308,17 @@ In some applications with multiple constraints, it is more convenient to define 
 wish to compute them in parallel."
   (let ((callback-identifier (add-new-callback nlopt function))
 		(tol (etypecase tol
-			   (number (doubles-array m tol))
+			   (number (doubles-array* m tol))
 			   (null (cffi:null-pointer))
 			   (list (assert (= (length tol) m)) (doubles tol))
 			   (doubles tol))))
-	(c:add_equality_mconstraint (ptr nlopt)
-								m
-								(cffi:get-callback 'mconstraint-callback)
-								callback-identifier
-								tol)))
+	(with-vector-ptr-to tol
+	  (ensure-success
+		(c:add_equality_mconstraint (ptr nlopt)
+									m
+									(cffi:get-callback 'mconstraint-callback)
+									callback-identifier
+									tol)))))
 
 (defmethod add-inequality-mconstraint (nlopt m function tol)
   "Add multiple inequality constraints c_i(x) = 0; i=1,2,..m 
@@ -338,11 +339,12 @@ wish to compute them in parallel."
 			   (null (cffi:null-pointer))
 			   (list (assert (= (length tol) m)) (doubles tol))
 			   (doubles tol))))
-	(c:add_inequality_mconstraint (ptr nlopt)
-								  m
-								  (cffi:get-callback 'mconstraint-callback)
-								  callback-identifier
-								  tol)))
+	(ensure-success
+	  (c:add_inequality_mconstraint (ptr nlopt)
+									m
+									(cffi:get-callback 'mconstraint-callback)
+									callback-identifier
+									tol))))
 
 ;;;;; Stopping Criteria
 
@@ -414,7 +416,7 @@ weights can be a single number, list, or array of doubles"
 	  (c:get_x_weights (ptr nlopt) ptr))
 	a))
 
-(defun (setf xtol-abs) (nlopt tolerances)
+(defun (setf xtol-abs) (tolerances nlopt)
   "Set absolute tolerances on optimization parameters. Stop when an optimization step 
  (or an estimate of the optimum) changes every parameter x[i] by less than tol[i]. 
 Note that since nlopt creates a copy of tolerances array subsequent changes to 
@@ -429,7 +431,7 @@ Criterion is disabled if `tolerances' is non-positive."
 	 (c:set_xtol_abs (ptr nlopt) tolerances))))
 
 
-(defun xtol_abs (nlopt)
+(defun xtol-abs (nlopt)
   "Get the stopping tolerances set for updates in parameters `x'"
   (let ((a (doubles-array (dimension nlopt) 0d0)))
 	(cffi:with-pointer-to-vector-data (ptr a)
@@ -487,14 +489,16 @@ found so far, by calling the this function from within your objective or constra
 			  :initial-element 0d0
 			  :element-type 'double-float))
 
-(defmethod optimize-nlp ((nlopt nlopt) &optional (x nil))
-  "Optimize the NonLinear Optimization problem `nlopt' with initial parameters initial-x"
+(defun optimize-nlopt (nlopt &optional (x nil))
+  "Optimize the NonLinear Optimization problem `nlopt' with initial parameters x
+`x' may be nil, a number, an list or a array of doubles"
   (setf x (etypecase x
-			  (null (default-initial-x nlopt))
-			  (list (assert (= (length x) (dimension nlopt)))
-			   (doubles x))
-			  (doubles (assert (= (length x) (dimension nlopt)))
-			   x)))
+			(null (default-initial-x nlopt))
+			(number (doubles-array* (dimension nlopt) x))
+			(list (assert (= (length x) (dimension nlopt)))
+			 (doubles x))
+			(doubles (assert (= (length x) (dimension nlopt)))
+			 x)))
   (cffi:with-foreign-object (f-value :double)
 	(let ((*nlopt-instance* nlopt))
 	  (cffi:with-pointer-to-vector-data (ptr x)
@@ -523,7 +527,7 @@ found so far, by calling the this function from within your objective or constra
 algorithm as a subroutine, typically for local optimization. You can change the
 local search algorithm and its tolerances by calling: 
 
- (setf (local-optimizer nlopt) local-nlopt)
+ (setf (local-optimizer nlopt) local-nlo
 
 Here, `local-nlopt' is another nlopt object whose parameters are used to
 determine the local search algorithm, its stopping criteria, and other algorithm
@@ -550,7 +554,7 @@ heuristically from the bounds, tolerances, and other information, but this may
 not always be the best choice.
 "
   (etypecase dx
-	(null (c:set_initial_step (ptr nlopt) (cffi:null-pointer)))
+  (null (c:set_initial_step (ptr nlopt) (cffi:null-pointer)))
 	(number (c:set_initial_step1 (ptr nlopt) (coerce dx 'double-float)))
 	(list (c:set_initial_step (ptr nlopt) (doubles dx)))
 	(doubles (c:set_initial_step (ptr nlopt) dx))))

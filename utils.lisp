@@ -1,5 +1,8 @@
 (in-package :nlopt)
 
+(defmacro ensure-success (&body body)
+  `(assert (eql :nlopt_success (progn ,@body))))
+
 (deftype doubles ()
   "Array of double floats"
   '(array double-float *))
@@ -29,6 +32,11 @@
 (defun (setf dref) (val ptr index)
   (setf (cffi:mem-aref ptr :double index) val))
 
+(defun setf-doubles2 (ptr data)
+  "Set values of a foreign array of doubles"
+  (loop for d double-float in data
+		for i integer from 0 do
+	   (setf (cffi:mem-aref ptr :double i) d)))
 
 (defun setf-doubles (ptr &rest data)
   "Set values of a foreign array of doubles"
@@ -36,13 +44,11 @@
 		for i integer from 0 do
 	   (setf (cffi:mem-aref ptr :double i) d)))
 
-
 (defun %dreffing@ (var expr)
-  (print expr)
   (cond ((atom expr)
 		 (if (and (symbolp expr)
 				  (char-equal #\@ (aref (symbol-name expr) 0)))
-			 `(dref ,(parse-integer (symbol-name expr) :start 1) ,var)
+			 `(dref ,var ,(parse-integer (symbol-name expr) :start 1))
 			 expr))
 		((listp expr)
 		 (cons (first expr) (mapcar (lambda (e) (%dreffing@ var e)) (rest expr))))))
@@ -60,3 +66,14 @@
 
 (defun foreign-darray-to-lisp (ptr) 
   (cffi:foreign-array-to-lisp ptr 'double-float))
+
+
+(defmacro with-vector-ptr-to (vector &body body)
+  (assert (symbolp vector))
+  `(if ,vector
+	   (cffi:with-pointer-to-vector-data (,vector ,vector)
+		 ,@body)
+	   (let ((,vector (cffi:null-pointer)))
+		 ,@body)))
+
+		 
