@@ -10,7 +10,7 @@ available online as well as original implementations of various other algorithms
 (in-package :nlopt)
 (defun solve()
   (let ((nlopt (create :nlopt_ld_mma 2)))
-	(set-lower-bounds nlopt (darray -11d0 0.001d0))
+	(set-lower-bounds nlopt (doubles -11d0 0.001d0))
 	(set-min-objective nlopt objective-function)
 	(add-inequality-constraint nlopt constraint1)
 	(add-inequality-constraint nlopt constraint2)
