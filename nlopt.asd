@@ -11,5 +11,6 @@
 			   (:file "cffi")
 			   (:file "utils")
                (:file "nlopt")
+			   (:file "nloptimize")
 			   (:file "example")))
 

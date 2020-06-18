@@ -34,7 +34,7 @@ selects which lisp callback to use. The identifer foreign struct is used to sele
 ;;;;;
 
 (defparameter *nlopt-instance* nil
-  "This variable is bound to the nlopt instance beign called")
+  "This variable is bound to the nlopt instance being called")
 
 (cffi:defcstruct callback-identifier
   (n :int))
@@ -142,7 +142,7 @@ You might want to use `copy' to make actual copy of object in lisp and c side"
 
 (defun copy (nlopt)
   "Make a copy of `nlopt' problem
-If you are subclassing the `nlopt' object define a `copy-object' method on your subclass 
+If you have subclassed the `nlopt' object define a `copy-object' method on your subclass 
 that copies all slots (including those of `nlopt')"
   (let* ((foreign-new (c:copy (ptr nlopt)))
 		 (lisp-new (copy-object nlopt)))
@@ -160,9 +160,11 @@ bounds can be a number, list or array of doubles"
   (etypecase bounds
 	(number (c:set_lower_bounds1 (ptr nlopt) bounds))
 	(list (assert (= (length bounds) (dimension nlopt)))
-	 (c:set_lower_bounds (ptr nlopt) (doubles bounds)))
+	 (cffi:with-pointer-to-vector-data (ptr (doubles bounds))
+	   (c:set_lower_bounds (ptr nlopt) ptr)))
 	(doubles (assert (= (length bounds) (dimension nlopt)))
-	 (c:set_lower_bounds (ptr nlopt) bounds))))
+	 (cffi:with-pointer-to-vector-data (ptr bounds)
+	   (c:set_lower_bounds (ptr nlopt) ptr)))))
 
 (defun (setf upper-bounds) (bounds nlopt)
   "Set upper bounds for parameters
@@ -170,9 +172,11 @@ bounds can be a number, list or array of doubles"
   (etypecase bounds
 	(number (c:set_upper_bounds1 (ptr nlopt) bounds))
 	(list (assert (= (length bounds) (dimension nlopt)))
-	 (c:set_upper_bounds (ptr nlopt) (doubles bounds)))
+	 (cffi:with-pointer-to-vector-data (ptr (doubles bounds))
+	   (c:set_upper_bounds (ptr nlopt) ptr)))
 	(doubles (assert (= (length bounds) (dimension nlopt)))
-	 (c:set_upper_bounds (ptr nlopt) bounds))))
+	 (cffi:with-pointer-to-vector-data (ptr bounds)
+	   (c:set_upper_bounds (ptr nlopt) ptr)))))
 
 (defun lower-bounds (nlopt)
   "Get lower bounds for parameters"
@@ -189,16 +193,17 @@ bounds can be a number, list or array of doubles"
 	ub))
 
 (defun (setf lower-bound) (bound nlopt i)
-  (c:set_lower_bound (ptr nlopt) i bound))
+  (c:set_lower_bound (ptr nlopt) i (coerce bound 'double-float)))
 
 (defun lower-bound (nlopt i)
   (svref (lower-bounds nlopt) i))
 
 (defun (setf upper-bound) (bound nlopt i)
-  (c:set_upper_bound (ptr nlopt) i bound))
+  (c:set_upper_bound (ptr nlopt) i (coerce bound 'double-float)))
 
 (defun upper-bound (nlopt i)
   (svref (upper-bounds nlopt) i))
+
 ;;;;; Set objective function
 
 (defun set-min-objective (nlopt function)
@@ -249,7 +254,7 @@ nonnegative eigenvalues."
 		(slot-value nlopt 'preconditioner) preconditioner))
 
 (defun set-precond-max-objective (nlopt function preconditioner)
-  "See documentation for set-precond-min-objective"
+  "See documentation for `(set-precond-min-objective)'"
   (c:set_precond_max_objective (ptr nlopt) (cffi:get-callback 'objective-function)
 							   (cffi:get-callback 'preconditioner-callback)
 							   (cffi:null-pointer))
@@ -507,7 +512,7 @@ found so far, by calling the this function from within your objective or constra
 
 (defun result-description (result)
   "Gives description for halting (forcefully or sucessfully) of the optimization problem
- (result-description (nth-value 2 (optimize-nlp nlopt)))"
+ (result-description (nth-value 2 (optimize-nlopt nlopt)))"
   (ecase result
 	(:NLOPT_SUCCESS "Generic success return value.")
 	(:NLOPT_STOPVAL_REACHED "Optimization stopped because stopval (above) was reached.")
@@ -516,10 +521,13 @@ found so far, by calling the this function from within your objective or constra
 	(:NLOPT_MAXEVAL_REACHED "Optimization stopped because maxeval (above) was reached.")
 	(:NLOPT_MAXTIME_REACHED "Optimization stopped because maxtime (above) was reached.")
 	(:NLOPT_FAILURE "Generic failure code.")
-	(:NLOPT_INVALID_ARGS "Invalid arguments (e.g. lower bounds are bigger than upper bounds, an unknown algorithm was specified, etcetera).")
+	(:NLOPT_INVALID_ARGS "Invalid arguments (e.g. lower bounds are bigger than upper bounds, an 
+unknown algorithm was specified, etcetera).")
 	(:NLOPT_OUT_OF_MEMORY "Ran out of memory.")
-	(:NLOPT_ROUNDOFF_LIMITED "Halted because roundoff errors limited progress. (In this case, the optimization still typically returns a useful result.)")
-	(:NLOPT_FORCED_STOP "Halted because of a forced termination: the user called nlopt_force_stop(opt) on the optimization’s nlopt_opt object opt from the user’s objective function or constraints.")))
+	(:NLOPT_ROUNDOFF_LIMITED "Halted because roundoff errors limited progress. (In this case, the 
+optimization still typically returns a useful result.)")
+	(:NLOPT_FORCED_STOP "Halted because of a forced termination: the user called nlopt_force_stop(opt)
+ on the optimization’s nlopt_opt object opt from the user’s objective function or constraints.")))
 
 
 (defun  set-local-optimizer (nlopt local-nlopt)
@@ -561,7 +569,7 @@ not always be the best choice.
 
 (defun initial-step (nlopt x)
   "Get the initial step size
-Here, x is the same as the initial guess that you plan to pass to `optimize-nlp'
+Here, x is the same as the initial guess that you plan to pass to `optimize-nlopt'
 if you have not set the initial step and NLopt is using its heuristics, its
 heuristic step size may depend on the initial x, which is why you must pass it
 here."

@@ -2,13 +2,27 @@
 ### _Bibek Panthi <bpanthi977@gmail.com>_
 
 This is a Common Lisp interface to NLopt. NLopt is a free/open-source library for nonlinear optimization, providing a common interface for a number of different free optimization routines 
-available online as well as original implementations of various other algorithms. See https://nlopt.readthedocs.io/en/latest/ for more information on the available algorithms.
+available online as well as original implementations of various other algorithms. See [link](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/) for more information on the available algorithms.
 
 ## Use 
 
+1) For usual cases the simple and easy `nloptimize` macro suffices:
 ```common-lisp 
-(in-package :nlopt)
-(defun solve()
+(defun solve ()
+  (nloptimize ((x y)
+			   :initial '(1.234 5.678))
+	(:minimize (sqrt y))
+	(:satisfy (>= y (expt (* 2 x) 3))
+			  (>= y (expt (- 1 x) 3))
+			  (> y 0))
+	(setf (xtol-rel *nlopt-instance*) 1d-4)))
+```
+The above example minimizes `sqrt(y)` subject to  `y >= (2x)^3`, `y >= (1 - x)^3` and `y>0` with initial guess for `(x,y)` at `(1.234, 5.678)` (This is the tutorial problem given [here](https://nlopt.readthedocs.io/en/latest/NLopt_Tutorial/)).
+
+
+2) Or you can use functions equivalent to those defined in original NLopt C library.
+```common-lisp 
+(defun solve ()
   (let ((nlopt (create :nlopt_ld_mma 2)))
 	(set-lower-bounds nlopt (doubles -11d0 0.001d0))
 	(set-min-objective nlopt objective-function)
@@ -33,11 +47,37 @@ Then you add objective function, constraints, bounds, stopping criteria, etc to 
 Here an objective to minimize the function (objective-function) is set. 
 This callback function (or lambdas can also be used) accepts the value of variables (x) in an foreign-array of double-float. Elements of x can be accessed by using `(dref x index)` function. 
 Also if the algorithm selected requires the gradient of the function to be computed then grad is set to a pointer to the foreign-array where calculated values have to set. 
-You can use `(setf (dref grad 0) value0 (dref grad 1) value1 ...)` or `(set-doubles grad value0 value1 ...)`. If the algorithm doesn't require gradient to be calculated then  `grad` is NIL. 
+You can use `(setf (dref grad 0) value0 (dref grad 1) value1 ...)` or `(set-doubles grad value0 value1 ...)`. If the algorithm doesn't require gradient to be calculated then `grad` is NIL. 
 The current `nlopt` object is also passed to the callback. 
 
-### Conventions 
-You should read the documentation of NLopt library at https://nlopt.readthedocs.io/en/latest/NLopt_Reference/ . This Common Lisp binding to the NLopt library tries to follow the 
+## Examples 
+Few examples are available in examples.lisp file. It may be helpful to follow along the [original tutorial](https://nlopt.readthedocs.io/en/latest/NLopt_Tutorial/) along with its implementation in lisp given in example.lisp file `(example-mma)` 
+
+## Installation 
+### Install the NLopt shared library to your system 
+#### Linux
+Ubuntu
+```bash 
+apt install nlopt 
+```
+Arch
+```bash 
+pacman -Suy nlopt
+```
+
+#### Windows 
+Download the prebuilt binary from [here](https://nlopt.readthedocs.io/en/latest/NLopt_on_Windows/)
+and copy the libnlopt.dll to any folder in your PATH (e.g. c:/Windows/System32/) or to this project's directory 
+
+### Install this library 
+Download or clone this repo to your `local-projects' directory then load it.
+```common-lisp
+(ql:quickload :nlopt)
+```
+
+
+## Conventions 
+You can read the documentation of NLopt C library [here](https://nlopt.readthedocs.io/en/latest/NLopt_Reference/). This Common Lisp binding to the NLopt library tries to follow the 
 names of the original functions albiet with some lispier modifications. Let's see few example: 
 
 ```c 
@@ -83,7 +123,7 @@ nlopt_optimize(nlopt_opt opt, double *x, double *opt_f);` is avaibale as
 Functions that have `set-foo` and `get-foo` counterparts are defined as `(setf (foo ...) value)` and `(foo ...)`
 
 All other functions are name similarly. 
-#### The NLopt Object
+### The NLopt Object
 | NLopt                                               | Common Lisp Binding          |
 |-----------------------------------------------------|------------------------------|
 | nlopt_create(nlopt_algorithm algorithm, unsigned n) | (create algorithm dimension) |
@@ -92,7 +132,7 @@ All other functions are name similarly.
 | nlopt_get_dimension(const nlopt_opt opt);           | (dimensions nlopt)           |
 | nlopt_algorithm_name(nlopt_algorithm algorithm);    | (algorithm-name algorithm)   |
 
-#### Objective Function
+### Objective Function
 | NLopt                                                                                          | Common Lisp Binding                            |
 |------------------------------------------------------------------------------------------------|------------------------------------------------|
 | nlopt_set_min_objective(nlopt_opt opt, nlopt_func f, void* f_data);                            | (set-min-objective nlopt function)             |
@@ -100,7 +140,7 @@ All other functions are name similarly.
 | nlopt_set_precond_min_objective(nlopt_opt opt, nlopt_func f, nlopt_precond pre, void *f_data); | (set-precond-min-objective nlopt function pre) |
 | nlopt_set_precond_min_objective(nlopt_opt opt, nlopt_func f, nlopt_precond pre, void *f_data); | (set-precond-max-objective nlopt function pre) |
 
-#### Constraints and Bounds 
+### Constraints and Bounds 
 | NLopt                                                                                                        | Common Lisp Binding                               |
 |--------------------------------------------------------------------------------------------------------------|---------------------------------------------------|
 | nlopt_add_inequality_constraint(nlopt_opt opt, nlopt_func fc, void* fc_data, double tol);                    | (add-inequality-constraint nlopt function tol)    |
@@ -120,7 +160,7 @@ All other functions are name similarly.
 |                                                                                                              | (lower-bound nlopt i)                             |
 |                                                                                                              | (upper-bound nlopt i)                             |
 
-#### Stopping Criteria 
+### Stopping Criteria 
 | NLopt                                                 | Common Lisp Binding              |
 |-------------------------------------------------------|----------------------------------|
 | nlopt_set_stopval(nlopt_opt opt, double stopval);     | (setf (stopval nlopt) stopval)   |
@@ -143,20 +183,20 @@ All other functions are name similarly.
 | nlopt_get_maxtime(nlopt_opt opt);                     | (maxtime nlopt)                  |
 | nlopt_get_numevals(nlopt_opt opt);                    | (numevals nlopt)                 |
 
-#### Forced Termination 
+### Forced Termination 
 | NLopt                                        | Common Lisp Binding                 |
 |----------------------------------------------|-------------------------------------|
 | nlopt_force_stop(nlopt_opt opt);             | (force-stop nlopt)                  |
 | nlopt_set_force_stop(nlopt_opt opt, int val) | (setf (force-stop-value nlopt) val) |
 | nlopt_get_force_stop(nlopt_opt opt)          | (force-stop-value nlopt)            |
 
-#### Optimization 
+### Optimization 
 | NLopt                                                                | Common Lisp Binding                     |
 |----------------------------------------------------------------------|-----------------------------------------|
 | nlopt_optimize(nlopt_opt opt, double *x, double *opt_f);             | (optimize-nlopt nlopt x)                |
 | nlopt_set_local_optimizer(nlopt_opt opt, const nlopt_opt local_opt); | (set-local-optimizer nlopt local-nlopt) |
 
-#### Others 
+### Others 
 | NLopt                                                                     | Common Lisp Binding             |
 |---------------------------------------------------------------------------|---------------------------------|
 | nlopt_set_initial_step(nlopt_opt opt, const double* dx);                  | (setf (initial-step nlopt) dx)  |
@@ -168,34 +208,6 @@ All other functions are name similarly.
 | nlopt_set_vector_storage(nlopt_opt opt, unsigned M);                      | (setf (vector-storage nlopt) M) |
 | nlopt_get_vector_storage(const nlopt_opt opt);                            | (vector-storage nlopt)          |
 | nlopt_version(int *major, int *minor, int *bugfix);                       | (version)                       |
-
-
-## Examples 
-Few examples are available in examples.lisp file. It may be helpful to follow along the tutorial https://nlopt.readthedocs.io/en/latest/NLopt_Tutorial/ along with its implementation given in example.lisp file `(example-mma)` 
-
-## Installation 
-### Install the NLopt shared library to your system 
-#### Linux
-* Ubuntu
-```bash 
-apt install nlopt 
-```
-* Arch
-```bash 
-pacman -Suy nlopt
-```
-
-#### Windows 
-Download the prebuilt binary from 
-https://nlopt.readthedocs.io/en/latest/NLopt_on_Windows/
-and copy the libnlopt.dll to any folder in your PATH (e.g. c:/Windows/System32/) or to this project's directory 
-
-### Install this library 
-Download or clone this repo to your local-projects directory then 
-```common-lisp
-(ql:quickload :nlopt)
-```
-it 
 
 ## License
 LGPL-3.0

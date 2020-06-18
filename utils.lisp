@@ -8,38 +8,43 @@
   '(array double-float *))
 
 (defun doubles (list)
+  "Create an array of double floats from given `list' of double floats"
   (make-array (length list) :element-type 'double-float
 							:initial-contents list))
 
 (defun doubles* (list)
+  "Create an array of double floats from given `list' (coerces numbers to double-float)"
   (make-array (length list) :element-type 'double-float
 							:initial-contents (loop for x in list
 													collect (coerce x 'double-float))))
 
 (defun doubles-array (size initial-element)
+  "Create oan array of double floats of `size' with `initial-element'"
   (make-array size :element-type 'double-float
 				   :initial-element initial-element))
 
 (defun doubles-array* (size initial-element)
+  "Create oan array of double floats of `size' with `initial-element' (coerces `initial-element' to double-float)"
   (make-array size :element-type 'double-float
 				   :initial-element (coerce initial-element 'double-float)))
 
 (declaim (inline dref))
 (defun dref (ptr index)
-  "Index a foreign array of double float"
+  "Return element of foreign double float array (`ptr') at `index' position"
   (cffi:mem-aref ptr :double index))
 
 (defun (setf dref) (val ptr index)
+  "Set element of foreign double float array `ptr' at `index' to value `val'"
   (setf (cffi:mem-aref ptr :double index) val))
 
 (defun setf-doubles2 (ptr data)
-  "Set values of a foreign array of doubles"
+  "Set elements of a foreign array of doubles"
   (loop for d double-float in data
 		for i integer from 0 do
 	   (setf (cffi:mem-aref ptr :double i) d)))
 
 (defun setf-doubles (ptr &rest data)
-  "Set values of a foreign array of doubles"
+  "Set elements of a foreign array of doubles"
   (loop for d double-float in data
 		for i integer from 0 do
 	   (setf (cffi:mem-aref ptr :double i) d)))
@@ -54,19 +59,13 @@
 		 (cons (first expr) (mapcar (lambda (e) (%dreffing@ var e)) (rest expr))))))
 
 (defmacro dreffing@ (x &body body)
-  "replace occurance of @n with (dref x n) in body"
+  "replace occurance of @n with (dref x n) in body
+Usefull for avoiding "
   `(progn ,@(mapcar (lambda (e) (%dreffing@ x e))
 					body)))
 
-;; (defun foreign-darray-to-lisp (ptr dimension)
-;;   (let ((arr (make-array dimension :element-type 'double-float)))
-;; 	(loop for i from 0 below dimension do
-;; 		 (setf (aref arr i) (cffi:mem-aref ptr :double i)))
-;; 	arr))
-
 (defun foreign-darray-to-lisp (ptr) 
   (cffi:foreign-array-to-lisp ptr 'double-float))
-
 
 (defmacro with-vector-ptr-to (vector &body body)
   (assert (symbolp vector))

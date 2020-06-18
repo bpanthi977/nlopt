@@ -8,6 +8,7 @@
   (:export #:copy
 		   #:algorithm
 		   #:dimensions
+		   #:algorithms
 		   #:algorithm-name
 		   #:create
 		   
@@ -42,13 +43,17 @@
 		   #:force-stop-value
 
 		   #:optimize-nlopt
+		   #:nloptimize 
 		   #:set-local-optimizer
 
 		   #:initial-step
 		   #:set-population
 		   #:srand
 		   #:srand-time
-		   #:vector-storage))
+		   #:vector-storage
+
+		   #:result-description
+		   #:version))
 
 
 
