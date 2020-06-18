@@ -10,12 +10,12 @@ available online as well as original implementations of various other algorithms
 ```common-lisp 
 (defun solve ()
   (nloptimize ((x y)
-			   :initial '(1.234 5.678))
-	(:minimize (sqrt y))
-	(:satisfy (>= y (expt (* 2 x) 3))
-			  (>= y (expt (- 1 x) 3))
-			  (> y 0))
-	(setf (xtol-rel *nlopt-instance*) 1d-4)))
+               :initial '(1.234 5.678))
+    (:minimize (sqrt y))
+    (:satisfy (>= y (expt (* 2 x) 3))
+              (>= y (expt (- 1 x) 3))
+              (> y 0))
+    (setf (xtol-rel *nlopt-instance*) 1d-4)))
 ```
 The above example minimizes `sqrt(y)` subject to  `y >= (2x)^3`, `y >= (1 - x)^3` and `y>0` with initial guess for `(x,y)` at `(1.234, 5.678)` (This is the tutorial problem given [here](https://nlopt.readthedocs.io/en/latest/NLopt_Tutorial/)).
 
@@ -24,12 +24,12 @@ The above example minimizes `sqrt(y)` subject to  `y >= (2x)^3`, `y >= (1 - x)^3
 ```common-lisp 
 (defun solve ()
   (let ((nlopt (create :nlopt_ld_mma 2)))
-	(set-lower-bounds nlopt (doubles -11d0 0.001d0))
-	(set-min-objective nlopt objective-function)
-	(add-inequality-constraint nlopt constraint1)
-	(add-inequality-constraint nlopt constraint2)
-	(set-xtol-rel nlopt 1d-4)
-	(optimize-nlp nlopt (darray 1.234d0 5.67d0))))
+    (set-lower-bounds nlopt (doubles -11d0 0.001d0))
+    (set-min-objective nlopt objective-function)
+    (add-inequality-constraint nlopt constraint1)
+    (add-inequality-constraint nlopt constraint2)
+    (set-xtol-rel nlopt 1d-4)
+    (optimize-nlp nlopt (darray 1.234d0 5.67d0))))
 ```
 First you create a nlopt object representing the optimization problem by specifying the algorithm to use and the dimension (number of variables) of the problem. 
 
@@ -97,16 +97,16 @@ is available as
 (set-min-objective nlopt function)
 ```
 The nlopt prefix is removed and all underscores are converted to hypens. Also notice that, the function doesn't take a `f_data` struct to pass along the callbacks. 
-	Because in Common Lisp we can use dynamic binding to set the contex. Also, instead of `f_data`, the nlopt instance is passed along in the callbacks. So, you may create a subclass of nlopt if you need 
-	to store some state to use in the callbacks. 
-	
+    Because in Common Lisp we can use dynamic binding to set the contex. Also, instead of `f_data`, the nlopt instance is passed along in the callbacks. So, you may create a subclass of nlopt if you need 
+    to store some state to use in the callbacks. 
+    
 The callback for the objective function 
 ```c 
 double f(unsigned n, const double* x, double* grad, void* f_data);
 ```
 should be defined as 
 ```common-lisp 
-(defun f(x grad nlopt) ...)	
+(defun f(x grad nlopt) ...)     
 ```
 As mentioned above instead of a user defined data `f_data`, the `nlopt` instance is passed. Also note that  parameter indicating dimension (`n`) as also unnecessary because
 it is available through the `nlopt` object as : `n` = `  (dimension nlopt)`. 
@@ -212,5 +212,3 @@ All other functions are name similarly.
 ## License
 LGPL-3.0
 https://choosealicense.com/licenses/lgpl-3.0/
-
-
