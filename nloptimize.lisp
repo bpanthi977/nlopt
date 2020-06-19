@@ -1,4 +1,4 @@
-(in-packge :nlopt)
+(in-package :nlopt)
 
 ;;;;; High Level nloptimize macro
 

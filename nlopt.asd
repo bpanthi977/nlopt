@@ -6,7 +6,7 @@
   :license  "LGPL-3.0"
   :version "0.0.1"
   :serial t
-  :depends-on (:cffi :trivial-package-local-nicknames :trivial-garbage)
+  :depends-on (:cffi :trivial-garbage)
   :components ((:file "package")
 			   (:file "cffi")
 			   (:file "utils")

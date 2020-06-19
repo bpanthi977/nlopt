@@ -1,8 +1,6 @@
 ;;;; nlopt.lisp
 
-(cl:in-package #:nlopt)
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (trivial-package-local-nicknames:add-package-local-nickname :c :nlopt.cffi))
+(in-package #:nlopt)
 
 ;;; Library Loading 
 (cffi:define-foreign-library nlopt

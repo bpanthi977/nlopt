@@ -1,10 +1,11 @@
 ;;;; package.lisp
 
-(cl:defpackage #:nlopt.cffi
+(defpackage #:nlopt.cffi
   (:use #:cl))
 
-(cl:defpackage #:nlopt
+(defpackage #:nlopt
   (:use #:cl)
+  (:local-nicknames (:c :nlopt.cffi))
   (:export #:copy
 		   #:algorithm
 		   #:dimensions
