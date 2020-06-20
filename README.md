@@ -210,5 +210,4 @@ All other functions are name similarly.
 | nlopt_version(int *major, int *minor, int *bugfix);                       | (version)                       |
 
 ## License
-LGPL-3.0
-https://choosealicense.com/licenses/lgpl-3.0/
+MIT
