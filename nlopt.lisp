@@ -195,13 +195,13 @@ bounds can be a number, list or array of doubles"
   (c:set_lower_bound (ptr nlopt) i (coerce bound 'double-float)))
 
 (defun lower-bound (nlopt i)
-  (svref (lower-bounds nlopt) i))
+  (aref (lower-bounds nlopt) i))
 
 (defun (setf upper-bound) (bound nlopt i)
   (c:set_upper_bound (ptr nlopt) i (coerce bound 'double-float)))
 
 (defun upper-bound (nlopt i)
-  (svref (upper-bounds nlopt) i))
+  (aref (upper-bounds nlopt) i))
 
 ;;;;; Set objective function
 
