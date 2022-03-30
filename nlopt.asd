@@ -8,9 +8,9 @@
   :serial t
   :depends-on (:cffi :trivial-garbage)
   :components ((:file "package")
-			   (:file "cffi")
-			   (:file "utils")
+	       (:file "cffi")
+	       (:file "utils")
                (:file "nlopt")
-			   (:file "nloptimize")
-			   (:file "example")))
+	       (:file "nloptimize")))
+	       
 

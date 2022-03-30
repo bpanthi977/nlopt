@@ -7,55 +7,51 @@
   (:use #:cl)
   (:local-nicknames (:c :nlopt.cffi))
   (:export #:copy
-		   #:algorithm
-		   #:dimensions
-		   #:algorithms
-		   #:algorithm-name
-		   #:create
-		   
-		   #:set-min-objective
-		   #:set-max-objective
-		   #:set-precond-min-objective
-		   #:set-precond-max-objective
+           #:algorithm
+           #:dimensions
+           #:algorithms
+           #:algorithm-name
+           #:create
 
-		   #:add-inequality-constraint
-		   #:add-equality-constraint
-		   #:remove-inequality
-		   #:remove-equality
-		   #:add-inequality-mconstraints
-		   #:add-equality-mconstraints
+           #:set-min-objective
+           #:set-max-objective
+           #:set-precond-min-objective
+           #:set-precond-max-objective
 
-		   #:lower-bounds
-		   #:upper-bounds
-		   #:lower-bound
-		   #:upper-bound
+           #:add-inequality-constraint
+           #:add-equality-constraint
+           #:remove-inequality
+           #:remove-equality
+           #:add-inequality-mconstraints
+           #:add-equality-mconstraints
 
-		   #:stopval
-		   #:ftol-rel
-		   #:ftol-abs
-		   #:xtol-rel
-		   #:x-weights
-		   #:xtol-abs
-		   #:maxeval
-		   #:maxtime
-		   #:numevals
+           #:lower-bounds
+           #:upper-bounds
+           #:lower-bound
+           #:upper-bound
 
-		   #:force-stop
-		   #:force-stop-value
+           #:stopval
+           #:ftol-rel
+           #:ftol-abs
+           #:xtol-rel
+           #:x-weights
+           #:xtol-abs
+           #:maxeval
+           #:maxtime
+           #:numevals
 
-		   #:optimize-nlopt
-		   #:nloptimize 
-		   #:set-local-optimizer
+           #:force-stop
+           #:force-stop-value
 
-		   #:initial-step
-		   #:set-population
-		   #:srand
-		   #:srand-time
-		   #:vector-storage
+           #:optimize-nlopt
+           #:nloptimize
+           #:set-local-optimizer
 
-		   #:result-description
-		   #:version))
+           #:initial-step
+           #:set-population
+           #:srand
+           #:srand-time
+           #:vector-storage
 
-
-
-
+           #:result-description
+           #:version))

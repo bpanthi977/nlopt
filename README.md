@@ -1,5 +1,4 @@
 # nlopt (Common Lisp NLopt Bindings)
-### _Bibek Panthi <bpanthi977@gmail.com>_
 
 This is a Common Lisp interface to NLopt. NLopt is a free/open-source library for nonlinear optimization, providing a common interface for a number of different free optimization routines 
 available online as well as original implementations of various other algorithms. See [link](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/) for more information on the available algorithms.
